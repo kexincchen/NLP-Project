@@ -1,5 +1,11 @@
 data/evidence.json
 preprocessed_evidence_map.json
+data/curated
+d2v*
+word2vec*
+evidence_vector.csv
+train_claim_vector.csv
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
