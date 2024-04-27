@@ -1,5 +1,6 @@
 data/evidence.json
 preprocessed_evidence_map.json
+GoogleNews-vectors-negative300.bin.gz
 data/curated
 d2v*
 word2vec*
