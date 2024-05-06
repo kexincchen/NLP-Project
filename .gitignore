@@ -8,6 +8,7 @@ evidence_vector.csv
 train_claim_vector.csv
 
 lstm_evidence_retrieval/*
+.DS_Store
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

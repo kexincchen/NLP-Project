@@ -1,0 +1,100 @@
+import json
+import numpy as np
+from tensorflow.keras.preprocessing.text import Tokenizer
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+from nltk.tokenize import word_tokenize
+import pickle
+
+def isfloat(num):
+    try:
+        float(num)
+        return True
+    except ValueError:
+        return False
+
+
+def preprocess_text(text, stemmer, stop_words):
+    """Preprocesses text by lowercasing, tokenizing, removing stopwords and stemming."""
+    tokens = word_tokenize(text.lower())
+    filtered_tokens = [
+        stemmer.stem(word)
+        for word in tokens
+        if word.isalnum() or isfloat(word) and word not in stop_words
+    ]
+    return " ".join(filtered_tokens)
+
+
+# Load JSON data
+def load_data(filepath):
+    with open(filepath, "r") as file:
+        data = json.load(file)
+    return data
+
+
+def text2seq(train_text, test_text, tokenizer_name):
+    tokenizer = Tokenizer(oov_token="<UNK>")
+    tokenizer.fit_on_texts(train_text)
+    input_text_index = (
+        tokenizer.word_index
+    )  # return dictionary of wordss {'the':1, 'earth':2, 'is':3}
+
+    with open(tokenizer_name + ".pickle", "wb") as handle:
+        pickle.dump(tokenizer, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    max_length = max([len(s.split()) for s in train_text])
+    print("max length:", max_length)
+
+    train_sequence = tokenizer.texts_to_sequences(train_text)
+    test_sequence = tokenizer.texts_to_sequences(test_text)
+    return (train_sequence, input_text_index, test_sequence, max_length)
+
+
+def to_padding(train_df, test_df):
+    # Initialize and fit the tokenizer on claim and evidence separately
+    x_claims_seq, x_claims_word_index, y_claims_seq, max_claims_length = text2seq(
+        train_df["claim"].tolist(), test_df["claim"].tolist(), "tokenizer_claims"
+    )
+    x_sents_seq, x_sents_word_index, y_sents_seq, max_sents_length = text2seq(
+        train_df["evidence"].tolist(),
+        test_df["evidence"].tolist(),
+        "tokenizer_evidence",
+    )
+
+    x_claims_data = pad_sequences(
+        x_claims_seq, maxlen=max_claims_length
+    )  # returns array of data
+    x_sents_data = pad_sequences(x_sents_seq, maxlen=max_sents_length)
+    x_labels = train_df["label"].values
+
+    y_claims_data = pad_sequences(y_claims_seq, maxlen=max_claims_length)
+    y_sents_data = pad_sequences(y_sents_seq, maxlen=max_sents_length)
+    y_labels = test_df["label"].values
+
+    return (
+        x_claims_data,
+        x_sents_data,
+        x_labels,
+        x_claims_word_index,
+        x_sents_word_index,
+        y_claims_data,
+        y_sents_data,
+        y_labels,
+    )
+
+
+def create_embedding_matrix(vocab_size, word_vectors, word_index, embedding_dim):
+    embedding_matrix = np.zeros((vocab_size, embedding_dim))
+    for word, i in word_index.items():
+        if word in word_vectors:
+            embedding_vector = word_vectors[word]
+            if embedding_vector is not None:
+                embedding_matrix[i] = embedding_vector
+    return embedding_matrix, embedding_dim
+
+
+def extract_evidences(evidence_dict, evidence_keys):
+    # Using list comprehension to extract values
+    evidence_values = [
+        evidence_dict[key] for key in evidence_keys if key in evidence_dict
+    ]
+    return evidence_values
