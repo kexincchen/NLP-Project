@@ -45,10 +45,10 @@ def text2seq(train_text, test_text, tokenizer_name, tokenizer):
 
     # Tokenize each text individually
     train_sequence = [
-        tokenizer.texts_to_sequences(text) for text in train_text
+        tokenizer.text_to_sequences(text) for text in train_text
     ]  # Process each text separately
     test_sequence = [
-        tokenizer.texts_to_sequences(text) for text in test_text
+        tokenizer.text_to_sequences(text) for text in test_text
     ]  # Process each text separately
     # Dictionary of words to index
     input_text_index = tokenizer.word_index
