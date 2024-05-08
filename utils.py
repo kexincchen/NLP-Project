@@ -12,17 +12,17 @@ def isfloat(num):
     except ValueError:
         return False
 
-
 def preprocess_text(text, stemmer, stop_words):
     """Preprocesses text by lowercasing, tokenizing, removing stopwords and stemming."""
+    text = text.replace('-', ' ')
     tokens = word_tokenize(text.lower())
     filtered_tokens = [
         stemmer.stem(word)
         for word in tokens
-        if word.isalnum() or isfloat(word) and word not in stop_words
+        if (word.isalnum() or isfloat(word)) 
+        # and word not in stop_words
     ]
     return " ".join(filtered_tokens)
-
 
 # Load JSON data
 def load_data(filepath):
@@ -114,6 +114,9 @@ def create_embedding_matrix(vocab_size, word_vectors, word_index, embedding_dim)
             embedding_vector = word_vectors[word]
             if embedding_vector is not None:
                 embedding_matrix[i] = embedding_vector
+            else:
+                # If a word is not found, the row stays all zeros (or could be initialized randomly)
+                embedding_matrix[i] = np.random.normal(scale=0.6, size=(embedding_dim, ))
     return embedding_matrix, embedding_dim
 
 
