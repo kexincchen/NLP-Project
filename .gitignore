@@ -6,6 +6,7 @@ d2v*
 word2vec*
 evidence_vector.csv
 train_claim_vector.csv
+checkpoints/*
 
 lstm_evidence_retrieval/*
 .DS_Store
