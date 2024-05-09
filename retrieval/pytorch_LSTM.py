@@ -8,7 +8,7 @@ from nltk.tokenize import word_tokenize
 import pandas as pd
 import random
 import pickle
-from utils import load_data, create_embedding_matrix, preprocess_text, to_padding
+from retrieval.utils import load_data, create_embedding_matrix, preprocess_text, to_padding
 import torch
 import torch.nn as nn
 import torch.optim as optim
