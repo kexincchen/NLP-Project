@@ -204,12 +204,12 @@ evidence_id = list(evidence_map.keys())
 evidence_text  = list(evidence_map.values())
 
 # use TFIDF to create embeddings for claims and evidences
-# vectorizer = TfidfVectorizer()
-# vectorizer.fit(train_claims_text + evidence_text)
-# evidence_vec = vectorizer.transform(evidence_text)
-# dev_claims_vec = vectorizer.transform(dev_claims_text)
-# print(dev_claims_vec.shape)
-# print(evidence_vec.shape)
+vectorizer = TfidfVectorizer()
+vectorizer.fit(train_claims_text + evidence_text)
+evidence_vec = vectorizer.transform(evidence_text)
+dev_claims_vec = vectorizer.transform(dev_claims_text)
+print(dev_claims_vec.shape)
+print(evidence_vec.shape)
 
 
 # use word2vec to create embeddings for claims and evidences
@@ -236,20 +236,20 @@ with open("dev_predict.json", "w") as outfile:
 
 
 # Apply on test set
-# test_claims_data = load_data('../data/test-claims-unlabelled.json')
-# test_claims_df = convert_to_df(test_claims_data, labelled=False, remove_stopwords=True)
-# test_claims_text = test_claims_df['claim_preprocessed'].tolist()
-# test_claims_id = test_claims_df['claim_id'].tolist()
+test_claims_data = load_data('../data/test-claims-unlabelled.json')
+test_claims_df = convert_to_df(test_claims_data, labelled=False, remove_stopwords=True)
+test_claims_text = test_claims_df['claim_preprocessed'].tolist()
+test_claims_id = test_claims_df['claim_id'].tolist()
 
-# test_claims_vec = vectorizer.transform(test_claims_text)
-# top_evidence_id = top_k_evidence(test_claims_id, test_claims_vec, evidence_vec, evidence_df, k=3)
+test_claims_vec = vectorizer.transform(test_claims_text)
+top_evidence_id = top_k_evidence(test_claims_id, test_claims_vec, evidence_vec, evidence_df, k=3)
 
-# test_claims_df['evidences'] = list(top_evidence_id.values())
+test_claims_df['evidences'] = list(top_evidence_id.values())
 
-# # get texts of top 5 evidence
-# test_claims_df['evidence_texts'] = test_claims_df['evidences'].apply(
-#     lambda x: [evidence_map[evidence_id] for evidence_id in x]
-# )
+# get texts of top 5 evidence
+test_claims_df['evidence_texts'] = test_claims_df['evidences'].apply(
+    lambda x: [evidence_map[evidence_id] for evidence_id in x]
+)
 
 # # Claim Classification
 # # combine claim text and evidence texts
