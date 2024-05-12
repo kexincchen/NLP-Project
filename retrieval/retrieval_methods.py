@@ -46,15 +46,15 @@ def convert_to_df(data, labelled=True, remove_stopwords=True):
 	data_for_dataframe = []
 	for claim_id, claim_details in data.items():
 		claim_text = preprocess_text(claim_details['claim_text'], remove_stopwords)
-		claim_label = claim_details['claim_label']
-		eids = claim_details['evidences']
 		if labelled:
+			claim_label = claim_details['claim_label']
+			eids = claim_details['evidences']
 			data_for_dataframe.append({
 					'claim_id': claim_id,
 					'claim_text': claim_details['claim_text'],
 					'claim_preprocessed': claim_text,
 					'evidence': eids,
-					'label': claim_label
+					'claim_label': claim_label
 				})
 		else:
 			data_for_dataframe.append({
@@ -78,7 +78,7 @@ def create_embedding(claims_text, evidence_text, embedding="doc2vec"):
 	elif embedding == "doc2vec":
 		d2v = doc2vec()
 		claim_vec = d2v.get_embedding(claims_text)
-		evidence_vec = w2v.get_embedding(evidence_text)
+		evidence_vec = d2v.get_embedding(evidence_text)
 		return claim_vec, evidence_vec
 
 	else:
@@ -172,7 +172,8 @@ class word2vec:
 					else:
 						num_words -= 1
 				# calculate the average word vector
-				vec = np.divide(vec, num_words)
+				if num_words > 0:
+					vec = np.divide(vec, num_words)
 				all_vec[i] = vec
 		return all_vec
 
@@ -181,19 +182,19 @@ class word2vec:
 train_claims_data = load_data('../data/train-claims.json')
 evidence_data = load_data('../data/evidence.json')
 dev_claims_data = load_data('../data/dev-claims.json')
-# test_claims_data = load_data('../data/test-claims-unlabelled.json')
 # preprocess_evidence('../data/curated/preprocessed_evidence_map.json', remove_stopwords=True)
 
 # convert data files to dataframe
 train_claims_df = convert_to_df(train_claims_data, labelled=True, remove_stopwords=True)
 dev_claims_df = convert_to_df(dev_claims_data, labelled=False, remove_stopwords=True)
 
+# evidence_map = load_data('../data/curated/mild_nostopwords_filtered_evidence.json')
 evidence_map = load_data('../data/curated/preprocessed_evidence_map.json')
 evidence_df = pd.DataFrame(evidence_map.items(), columns=['id', 'evidence'])
 
-# train_claims_df['evidence_texts'] = train_claims_df['evidence'].apply(
-# 	lambda x: [evidence_map[evidence_id] for evidence_id in x]
-# )
+train_claims_df['evidence_texts'] = train_claims_df['evidence'].apply(
+	lambda x: [evidence_map[evidence_id] for evidence_id in x]
+)
 
 train_claims_text = train_claims_df['claim_preprocessed'].tolist()
 dev_claims_text = dev_claims_df['claim_preprocessed'].tolist()
@@ -203,12 +204,23 @@ evidence_id = list(evidence_map.keys())
 evidence_text  = list(evidence_map.values())
 
 # use TFIDF to create embeddings for claims and evidences
-vectorizer = TfidfVectorizer()
-vectorizer.fit(train_claims_text + evidence_text)
-evidence_vec = vectorizer.transform(evidence_text)
-dev_claims_vec = vectorizer.transform(dev_claims_text)
-print(dev_claims_vec.shape)
-print(evidence_vec.shape)
+# vectorizer = TfidfVectorizer()
+# vectorizer.fit(train_claims_text + evidence_text)
+# evidence_vec = vectorizer.transform(evidence_text)
+# dev_claims_vec = vectorizer.transform(dev_claims_text)
+# print(dev_claims_vec.shape)
+# print(evidence_vec.shape)
+
+
+# use word2vec to create embeddings for claims and evidences
+w2v = word2vec()
+# w2v.train_model(train_claims_text + evidence_text)
+dev_claims_vec, evidence_vec = create_embedding(dev_claims_text, evidence_text, embedding='word2vec')
+
+# use doc2vec to create embeddings for claims and evidences
+# d2v = doc2vec()
+# d2v.train_model(train_claims_text + evidence_text)
+# dev_claims_vec, evidence_vec = create_embedding(dev_claims_text, evidence_text, embedding='doc2vec')
 
 # select top 3 evidence for each claim
 top_evidence_id = top_k_evidence(dev_claims_id, dev_claims_vec, evidence_vec, evidence_df, k=3)
@@ -222,7 +234,44 @@ for claim_id, _ in test_out_temp.items():
 with open("dev_predict.json", "w") as outfile:
     json.dump(test_out_temp, outfile)
 
-# import subprocess
-# output = subprocess.check_output("python eval.py --predictions dev_predict.json --groundtruth ../data/dev-claims.json", shell=True)
-# print(output)
 
+# Apply on test set
+# test_claims_data = load_data('../data/test-claims-unlabelled.json')
+# test_claims_df = convert_to_df(test_claims_data, labelled=False, remove_stopwords=True)
+# test_claims_text = test_claims_df['claim_preprocessed'].tolist()
+# test_claims_id = test_claims_df['claim_id'].tolist()
+
+# test_claims_vec = vectorizer.transform(test_claims_text)
+# top_evidence_id = top_k_evidence(test_claims_id, test_claims_vec, evidence_vec, evidence_df, k=3)
+
+# test_claims_df['evidences'] = list(top_evidence_id.values())
+
+# # get texts of top 5 evidence
+# test_claims_df['evidence_texts'] = test_claims_df['evidences'].apply(
+#     lambda x: [evidence_map[evidence_id] for evidence_id in x]
+# )
+
+# # Claim Classification
+# # combine claim text and evidence texts
+# X_train = train_claims_df['claim_preprocessed'] + train_claims_df['evidence_texts'].apply(lambda x: ' '.join(x))
+# y_train = train_claims_df['claim_label']
+
+# X_test = test_claims_df['claim_preprocessed'] + test_claims_df['evidence_texts'].apply(lambda x: ' '.join(x))
+
+# count_vectorizer = CountVectorizer()
+# X_train_count = count_vectorizer.fit_transform(X_train)
+# X_test_count = count_vectorizer.transform(X_test)
+
+# # Random Forest Classifier
+# rf_classifier = RandomForestClassifier(n_estimators=100, max_depth=None, random_state=42)
+# rf_classifier.fit(X_train_count, y_train)
+# y_pred = rf_classifier.predict(X_test_count)
+# test_claims_df["claim_label"] = y_pred
+
+# test_claims_df.drop(columns=['evidence_texts', 'claim_preprocessed'], inplace=True)
+# test_claims_df.set_index('claim_id', inplace=True)
+
+# # convert to json file
+# result = test_claims_df.to_json(orient="index")
+# with open('test-output.json', 'w') as f:
+#     f.write(result)
