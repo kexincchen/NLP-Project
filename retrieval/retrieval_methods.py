@@ -213,9 +213,9 @@ print(evidence_vec.shape)
 
 
 # use word2vec to create embeddings for claims and evidences
-w2v = word2vec()
-# w2v.train_model(train_claims_text + evidence_text)
-dev_claims_vec, evidence_vec = create_embedding(dev_claims_text, evidence_text, embedding='word2vec')
+# w2v = word2vec()
+# # w2v.train_model(train_claims_text + evidence_text)
+# dev_claims_vec, evidence_vec = create_embedding(dev_claims_text, evidence_text, embedding='word2vec')
 
 # use doc2vec to create embeddings for claims and evidences
 # d2v = doc2vec()
@@ -272,6 +272,6 @@ test_claims_df['evidence_texts'] = test_claims_df['evidences'].apply(
 # test_claims_df.set_index('claim_id', inplace=True)
 
 # # convert to json file
-# result = test_claims_df.to_json(orient="index")
-# with open('test-output.json', 'w') as f:
-#     f.write(result)
+result = test_claims_df.to_json(orient="index")
+with open('test-output.json', 'w') as f:
+    f.write(result)
