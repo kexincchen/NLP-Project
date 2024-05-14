@@ -251,25 +251,25 @@ test_claims_df['evidence_texts'] = test_claims_df['evidences'].apply(
     lambda x: [evidence_map[evidence_id] for evidence_id in x]
 )
 
-# # Claim Classification
-# # combine claim text and evidence texts
-# X_train = train_claims_df['claim_preprocessed'] + train_claims_df['evidence_texts'].apply(lambda x: ' '.join(x))
-# y_train = train_claims_df['claim_label']
+# Claim Classification
+# combine claim text and evidence texts
+X_train = train_claims_df['claim_preprocessed'] + train_claims_df['evidence_texts'].apply(lambda x: ' '.join(x))
+y_train = train_claims_df['claim_label']
 
-# X_test = test_claims_df['claim_preprocessed'] + test_claims_df['evidence_texts'].apply(lambda x: ' '.join(x))
+X_test = test_claims_df['claim_preprocessed'] + test_claims_df['evidence_texts'].apply(lambda x: ' '.join(x))
 
-# count_vectorizer = CountVectorizer()
-# X_train_count = count_vectorizer.fit_transform(X_train)
-# X_test_count = count_vectorizer.transform(X_test)
+count_vectorizer = CountVectorizer()
+X_train_count = count_vectorizer.fit_transform(X_train)
+X_test_count = count_vectorizer.transform(X_test)
 
-# # Random Forest Classifier
-# rf_classifier = RandomForestClassifier(n_estimators=100, max_depth=None, random_state=42)
-# rf_classifier.fit(X_train_count, y_train)
-# y_pred = rf_classifier.predict(X_test_count)
-# test_claims_df["claim_label"] = y_pred
+# Random Forest Classifier
+rf_classifier = RandomForestClassifier(n_estimators=100, max_depth=None, random_state=42)
+rf_classifier.fit(X_train_count, y_train)
+y_pred = rf_classifier.predict(X_test_count)
+test_claims_df["claim_label"] = y_pred
 
-# test_claims_df.drop(columns=['evidence_texts', 'claim_preprocessed'], inplace=True)
-# test_claims_df.set_index('claim_id', inplace=True)
+test_claims_df.drop(columns=['evidence_texts', 'claim_preprocessed'], inplace=True)
+test_claims_df.set_index('claim_id', inplace=True)
 
 # # convert to json file
 result = test_claims_df.to_json(orient="index")
